@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>General Knowledge Quiz by Naseeb</title>
+    <style>
+        /* 1. Visual Theme & Colors (CSS) */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .quiz-container {
+            background: white;
+            width: 100%;
+            max-width: 550px;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        h2 { color: #333; margin-bottom: 20px; }
+        p { color: #777; margin-bottom: 20px; }
+
+        .btn {
+            background-color: #4db6ac; /* Teal Green */
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.3s;
+            margin: 5px;
+        }
+
+        .btn:hover { opacity: 0.9; transform: translateY(-2px); }
+        .btn-submit { background-color: #ff8a80; } /* Soft Pink */
+
+        .options-container { text-align: left; margin: 20px 0; }
+
+        .option {
+            background: #f8f9fa;
+            border: 2px solid #eee;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 15px;
+        }
+
+        .option:hover { border-color: #4db6ac; }
+        .option.selected { background: #e0f2f1; border-color: #4db6ac; font-weight: bold; }
+
+        .screen { display: none; }
+        .active { display: block; }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        #timer { color: #ff8a80; }
+
+        table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+        td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+        .val { font-weight: bold; text-align: right; }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <div id="welcome-screen" class="screen active">
+            <h2>General Knowledge Quiz</h2>
+            <p>Class 1 - Total Questions: 30</p>
+            <button class="btn" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-header">
+                <span>Question: <span id="q-count">1</span>/30</span>
+                <span id="timer">00:00</span>
+            </div>
+            <h3 id="question-text" style="margin-bottom: 20px; min-height: 60px;"></h3>
+            <div class="options-container" id="options"></div>
+            <div style="display: flex; justify-content: space-between;">
+                <button class="btn btn-submit" onclick="showResults()">Submit Quiz</button>
+                <button class="btn" onclick="nextQuestion()">Continue</button>
+            </div>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <h2>Quiz Results</h2>
+            <table>
+                <tr><td>Total Questions</td><td class="val">30</td></tr>
+                <tr><td>Attempted</td><td class="val" id="res-attempted">0</td></tr>
+                <tr><td>Correct</td><td class="val" id="res-correct" style="color: #4db6ac;">0</td></tr>
+                <tr><td>Wrong / Skipped</td><td class="val" id="res-wrong" style="color: #ff8a80;">0</td></tr>
+                <tr><td>Time Taken</td><td class="val" id="res-time">00:00</td></tr>
+            </table>
+            <button class="btn" style="margin-top: 20px;" onclick="location.reload()">Restart Test</button>
+        </div>
+    </div>
+
+    <script>
+        const questionBank = [
+            { q: "Who is the founder of Pakistan?", options: ["Allama Iqbal", "Quaid-e-Azam", "Sir Syed Ahmed Khan", "Liaquat Ali Khan"], correct: "Quaid-e-Azam" },
+            { q: "How many colors are there in a rainbow?", options: ["Five", "Six", "Seven", "Eight"], correct: "Seven" },
+            { q: "Which is the national flower of Pakistan?", options: ["Rose", "Sunflower", "Jasmine", "Tulip"], correct: "Jasmine" },
+            { q: "How many days are there in a week?", options: ["5", "6", "7", "10"], correct: "7" },
+            { q: "Which direction does the sun rise in?", options: ["West", "East", "North", "South"], correct: "East" },
+            { q: "What is the capital city of Pakistan?", options: ["Karachi", "Lahore", "Islamabad", "Quetta"], correct: "Islamabad" },
+            { q: "Which of these is a healthy fruit?", options: ["Burger", "Apple", "Chocolate", "Pizza"], correct: "Apple" },
+            { q: "How many months are there in a year?", options: ["10", "11", "12", "24"], correct: "12" },
+            { q: "Which is the national game of Pakistan?", options: ["Cricket", "Football", "Hockey", "Tennis"], correct: "Hockey" },
+            { q: "Which transport runs on tracks?", options: ["Car", "Train", "Cycle", "Bus"], correct: "Train" },
+            { q: "How many wheels does a tricycle have?", options: ["Two", "Three", "Four", "One"], correct: "Three" },
+            { q: "On which date do we celebrate Independence Day?", options: ["23rd March", "6th September", "14th August", "25th December"], correct: "14th August" },
+            { q: "Which of these is an indoor game?", options: ["Football", "Cricket", "Ludo", "Hockey"], correct: "Ludo" },
+            { q: "Who is the national poet of Pakistan?", options: ["Faiz Ahmed Faiz", "Allama Iqbal", "Mirza Ghalib", "Ahmad Faraz"], correct: "Allama Iqbal" },
+            { q: "Which shape has four equal sides?", options: ["Triangle", "Circle", "Square", "Star"], correct: "Square" },
+            { q: "What do we call a large area of land covered with trees?", options: ["Desert", "Forest", "Ocean", "Island"], correct: "Forest" },
+            { q: "Which is the national bird of Pakistan?", options: ["Eagle", "Peacock", "Chukar Partridge", "Sparrow"], correct: "Chukar Partridge" },
+            { q: "How many primary colors are there?", options: ["Two", "Three", "Four", "Five"], correct: "Three" },
+            { q: "Which province is Lahore the capital of?", options: ["Sindh", "Punjab", "Balochistan", "KPK"], correct: "Punjab" },
+            { q: "What is the opposite of 'Full'?", options: ["Big", "Empty", "High", "Heavy"], correct: "Empty" },
+            { q: "Which month comes after January?", options: ["March", "April", "February", "June"], correct: "February" },
+            { q: "What is the national animal of Pakistan?", options: ["Lion", "Markhor", "Tiger", "Camel"], correct: "Markhor" },
+            { q: "Where do you go when you are very sick?", options: ["Park", "Hospital", "Market", "Zoo"], correct: "Hospital" },
+            { q: "Which is the national dress of Pakistan?", options: ["Pent Shirt", "Shalwar Kameez", "Saree", "Dhoti"], correct: "Shalwar Kameez" },
+            { q: "What do we use to stay dry in the rain?", options: ["Hat", "Umbrella", "Gloves", "Socks"], correct: "Umbrella" },
+            { q: "What is the currency of Pakistan?", options: ["Dollar", "Rupee", "Riyal", "Euro"], correct: "Rupee" },
+            { q: "Which is the tallest animal on earth?", options: ["Elephant", "Giraffe", "Zebra", "Hippo"], correct: "Giraffe" },
+            { q: "On which day do we celebrate 'Pakistan Day'?", options: ["14th August", "23rd March", "6th September", "9th November"], correct: "23rd March" },
+            { q: "How many sides does a triangle have?", options: ["Two", "Three", "Four", "Five"], correct: "Three" },
+            { q: "Which city is known as the 'City of Lights'?", options: ["Lahore", "Karachi", "Islamabad", "Quetta"], correct: "Karachi" },
+            { q: "What color do you get by mixing red and yellow?", options: ["Green", "Orange", "Purple", "Pink"], correct: "Orange" },
+            { q: "Which is the national fruit of Pakistan in summer?", options: ["Apple", "Mango", "Guava", "Banana"], correct: "Mango" },
+            { q: "Which of these do we wear on our feet?", options: ["Shirt", "Shoes", "Cap", "Watch"], correct: "Shoes" },
+            { q: "Which province is Quetta the capital of?", options: ["Punjab", "Sindh", "Balochistan", "KPK"], correct: "Balochistan" },
+            { q: "Which is the largest animal in the sea?", options: ["Shark", "Blue Whale", "Dolphin", "Octopus"], correct: "Blue Whale" },
+            { q: "What symbols are on the Pakistani flag?", options: ["Sun and Moon", "Crescent and Star", "Two Stars", "A Flower"], correct: "Crescent and Star" },
+            { q: "Which of these is used to tell the time?", options: ["Ruler", "Clock", "Mirror", "Compass"], correct: "Clock" },
+            { q: "Who was the first Prime Minister of Pakistan?", options: ["Quaid-e-Azam", "Liaquat Ali Khan", "Z.A. Bhutto", "Ayub Khan"], correct: "Liaquat Ali Khan" },
+            { q: "What is the opposite of 'Fast'?", options: ["Quick", "Slow", "High", "Loud"], correct: "Slow" },
+            { q: "Which province is Peshawar the capital of?", options: ["Sindh", "Punjab", "Khyber Pakhtunkhwa", "Balochistan"], correct: "Khyber Pakhtunkhwa" },
+            { q: "How many letters are there in the English alphabet?", options: ["24", "25", "26", "28"], correct: "26" },
+            { q: "Which mountain is the highest in Pakistan?", options: ["Mount Everest", "K2", "Nanga Parbat", "Rakaposhi"], correct: "K2" },
+            { q: "Which room in the house is for cooking?", options: ["Bedroom", "Kitchen", "Bathroom", "TV Lounge"], correct: "Kitchen" },
+            { q: "On which day do we celebrate Defence Day?", options: ["14th August", "6th September", "23rd March", "25th December"], correct: "6th September" },
+            { q: "Which of these is a summer fruit?", options: ["Orange", "Watermelon", "Apple", "Almond"], correct: "Watermelon" },
+            { q: "Which is the national tree of Pakistan?", options: ["Neem", "Deodar", "Peepal", "Mango Tree"], correct: "Deodar" },
+            { q: "What do we call a person who flies an airplane?", options: ["Driver", "Pilot", "Sailor", "Chef"], correct: "Pilot" },
+            { q: "What is the national language of Pakistan?", options: ["English", "Punjabi", "Urdu", "Sindhi"], correct: "Urdu" },
+            { q: "Which is the first letter of the alphabet?", options: ["B", "C", "A", "Z"], correct: "A" },
+            { q: "Which city is famous for its historical Badshahi Mosque?", options: ["Karachi", "Lahore", "Peshawar", "Quetta"], correct: "Lahore" },
+            { q: "What is the color of a ripe strawberry?", options: ["Green", "Blue", "Red", "Yellow"], correct: "Red" },
+            { q: "Which festival do Muslims celebrate after Ramadan?", options: ["Eid-ul-Fitr", "Eid-ul-Adha", "Shab-e-Barat", "Holi"], correct: "Eid-ul-Fitr" },
+            { q: "Which is an outdoor game?", options: ["Chess", "Carrom", "Football", "Cards"], correct: "Football" },
+            { q: "Where do Muslims go to offer prayers?", options: ["Church", "Temple", "Mosque", "School"], correct: "Mosque" },
+            { q: "Which is the smallest bird in the world?", options: ["Sparrow", "Hummingbird", "Parrot", "Crow"], correct: "Hummingbird" },
+            { q: "Which is the largest province of Pakistan by area?", options: ["Punjab", "Sindh", "Balochistan", "KPK"], correct: "Balochistan" },
+            { q: "What do we use to keep our hair neat?", options: ["Spoon", "Comb", "Key", "Pencil"], correct: "Comb" },
+            { q: "What do we call the brother of our father?", options: ["Mama", "Chacha", "Nana", "Dada"], correct: "Chacha" },
+            { q: "Which of these is a vehicle with three wheels?", options: ["Bicycle", "Rickshaw", "Car", "Truck"], correct: "Rickshaw" },
+            { q: "What is the national beverage of Pakistan?", options: ["Tea", "Coffee", "Sugarcane Juice", "Milk"], correct: "Sugarcane Juice" },
+            { q: "Which of these is a land transport?", options: ["Ship", "Boat", "Bus", "Airplane"], correct: "Bus" },
+            { q: "Which province is Karachi the capital of?", options: ["Punjab", "Sindh", "Balochistan", "KPK"], correct: "Sindh" },
+            { q: "How many sense organs do humans have?", options: ["Three", "Four", "Five", "Six"], correct: "Five" },
+            { q: "On which day is Quaid-e-Azam's birthday celebrated?", options: ["14th August", "23rd March", "25th December", "9th November"], correct: "25th December" },
+            { q: "What do we call the person who mends our shoes?", options: ["Barber", "Cobbler", "Tailor", "Pilot"], correct: "Cobbler" },
+            { q: "What is the national motto of Pakistan?", options: ["Peace", "Unity, Faith, Discipline", "Work Hard", "Unity is Strength"], correct: "Unity, Faith, Discipline" },
+            { q: "Which direction is opposite to North?", options: ["East", "West", "South", "Up"], correct: "South" },
+            { q: "Which is the national mountain of Pakistan?", options: ["K2", "Nanga Parbat", "Broad Peak", "Rakaposhi"], correct: "Nanga Parbat" },
+            { q: "Which of these is a farm animal?", options: ["Lion", "Tiger", "Cow", "Snake"], correct: "Cow" },
+            { q: "Which is the largest city in Pakistan?", options: ["Islamabad", "Karachi", "Multan", "Quetta"], correct: "Karachi" },
+            { q: "What is the color of a dry leaf?", options: ["Green", "Brown", "Blue", "Red"], correct: "Brown" },
+            { q: "How many stars are on the Pakistani flag?", options: ["One", "Two", "Three", "Five"], correct: "One" },
+            { q: "Which of these is used for cleaning floors?", options: ["Broom", "Plate", "Pillow", "Book"], correct: "Broom" },
+            { q: "Which place do we visit to see many wild animals?", options: ["Park", "Zoo", "Market", "Hospital"], correct: "Zoo" },
+            { q: "What is the color of an orange fruit?", options: ["Red", "Orange", "Blue", "Green"], correct: "Orange" },
+            { q: "What do you call the father of your father?", options: ["Nana", "Dada", "Uncle", "Brother"], correct: "Dada" },
+            { q: "Which of these is a sign of safety on the road?", options: ["Running", "Using Zebra Crossing", "Playing", "Sleeping"], correct: "Using Zebra Crossing" },
+            { q: "Which bird has a very long neck and cannot fly?", options: ["Parrot", "Ostrich", "Sparrow", "Hen"], correct: "Ostrich" },
+            { q: "What is the color of a crow?", options: ["White", "Black", "Grey", "Brown"], correct: "Black" }
+        ];
+
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let attemptedCount = 0;
+        let selectedOption = null;
+        let timerInterval;
+        let seconds = 0;
+
+        function startQuiz() {
+            // Shuffle and pick 30
+            currentQuestions = questionBank.sort(() => 0.5 - Math.random()).slice(0, 30);
+            document.getElementById('welcome-screen').classList.remove('active');
+            document.getElementById('quiz-screen').classList.add('active');
+            startTimer();
+            loadQuestion();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                seconds++;
+                let m = Math.floor(seconds / 60).toString().padStart(2, '0');
+                let s = (seconds % 60).toString().padStart(2, '0');
+                document.getElementById('timer').innerText = `${m}:${s}`;
+            }, 1000);
+        }
+
+        function loadQuestion() {
+            selectedOption = null;
+            const q = currentQuestions[currentIndex];
+            document.getElementById('q-count').innerText = currentIndex + 1;
+            document.getElementById('question-text').innerText = q.q;
+            
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            
+            q.options.forEach(opt => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                div.innerText = opt;
+                div.onclick = function() {
+                    document.querySelectorAll('.option').forEach(el => el.classList.remove('selected'));
+                    div.classList.add('selected');
+                    selectedOption = opt;
+                };
+                optionsDiv.appendChild(div);
+            });
+        }
+
+        function nextQuestion() {
+            if (selectedOption !== null) {
+                attemptedCount++;
+                if (selectedOption === currentQuestions[currentIndex].correct) {
+                    score++;
+                }
+            }
+            
+            currentIndex++;
+            if (currentIndex < 30) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            clearInterval(timerInterval);
+            let wrong = 30 - score;
+            document.getElementById('res-attempted').innerText = attemptedCount;
+            document.getElementById('res-correct').innerText = score;
+            document.getElementById('res-wrong').innerText = wrong;
+            document.getElementById('res-time').innerText = document.getElementById('timer').innerText;
+
+            document.getElementById('quiz-screen').classList.remove('active');
+            document.getElementById('result-screen').classList.add('active');
+        }
+    </script>
+</body>
+</html>
